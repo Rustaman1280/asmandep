@@ -17,7 +17,7 @@ class KelasSeeder extends Seeder
         $rpl = Jurusan::where('kode', 'RPL')->first();
         $tkj = Jurusan::where('kode', 'TKJ')->first();
 
-        Kelas::create(['jurusan_id' => $rpl->id, 'nama' => 'X RPL 1', 'tingkat' => 'X']);
-        Kelas::create(['jurusan_id' => $tkj->id, 'nama' => 'XI TKJ 1', 'tingkat' => 'XI']);
+        Kelas::firstOrCreate(['jurusan_id' => $rpl->id, 'nama' => 'X RPL 1'], ['tingkat' => 'X']);
+        Kelas::firstOrCreate(['jurusan_id' => $tkj->id, 'nama' => 'XI TKJ 1'], ['tingkat' => 'XI']);
     }
 }

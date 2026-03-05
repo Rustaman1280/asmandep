@@ -17,7 +17,7 @@ class LabSeeder extends Seeder
         $rpl = Jurusan::where('kode', 'RPL')->first();
         $tkj = Jurusan::where('kode', 'TKJ')->first();
 
-        Lab::create(['jurusan_id' => $rpl->id, 'nama' => 'Lab RPL']);
-        Lab::create(['jurusan_id' => $tkj->id, 'nama' => 'Lab TKJ']);
+        Lab::firstOrCreate(['jurusan_id' => $rpl->id, 'nama' => 'Lab RPL']);
+        Lab::firstOrCreate(['jurusan_id' => $tkj->id, 'nama' => 'Lab TKJ']);
     }
 }

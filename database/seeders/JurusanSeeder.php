@@ -13,7 +13,7 @@ class JurusanSeeder extends Seeder
      */
     public function run(): void
     {
-        Jurusan::create(['nama' => 'Rekayasa Perangkat Lunak', 'kode' => 'RPL']);
-        Jurusan::create(['nama' => 'Teknik Komputer dan Jaringan', 'kode' => 'TKJ']);
+        Jurusan::firstOrCreate(['kode' => 'RPL'], ['nama' => 'Rekayasa Perangkat Lunak']);
+        Jurusan::firstOrCreate(['kode' => 'TKJ'], ['nama' => 'Teknik Komputer dan Jaringan']);
     }
 }

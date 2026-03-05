@@ -13,15 +13,19 @@ class SupplierSeeder extends Seeder
      */
     public function run(): void
     {
-        Supplier::create([
-            'nama_supplier' => 'CV. Maju Jaya',
-            'alamat' => 'Jl. Sudirman No. 12',
-            'no_telp' => '081234567890',
-        ]);
-        Supplier::create([
-            'nama_supplier' => 'PT. Teknologi Masa Depan',
-            'alamat' => 'Jl. Thamrin No. 88',
-            'no_telp' => '089876543210',
-        ]);
+        Supplier::firstOrCreate(
+            ['nama_supplier' => 'CV. Maju Jaya'],
+            [
+                'alamat' => 'Jl. Sudirman No. 12',
+                'no_telp' => '081234567890',
+            ]
+        );
+        Supplier::firstOrCreate(
+            ['nama_supplier' => 'PT. Teknologi Masa Depan'],
+            [
+                'alamat' => 'Jl. Thamrin No. 88',
+                'no_telp' => '089876543210',
+            ]
+        );
     }
 }
