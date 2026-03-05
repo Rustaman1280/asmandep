@@ -13,3 +13,5 @@ COPY . .
 RUN composer install --optimize-autoloader --no-scripts --no-interaction
 
 CMD php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan migrate
+CMD php artisan db:seed
