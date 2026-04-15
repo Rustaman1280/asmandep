@@ -14,7 +14,7 @@ class BarangController extends Controller
 {
     public function index()
     {
-        $barangs = Barang::with(['supplier', 'ruangan'])->get();
+        $barangs = Barang::with(['supplier', 'ruangans'])->get();
         $suppliers = Supplier::all();
         return view('barangs.index', compact('barangs', 'suppliers'));
     }
@@ -23,10 +23,9 @@ class BarangController extends Controller
     {
         $suppliers = Supplier::all();
         $ruangans = Ruangan::all();
-        $preLokasiType = request('lokasi_type'); // now defaults to ruangan, keeping for compatibility
         $preLokasiId = request('lokasi_id');
         $redirectTo = request('redirect_to');
-        return view('barangs.create', compact('suppliers', 'ruangans', 'preLokasiType', 'preLokasiId', 'redirectTo'));
+        return view('barangs.create', compact('suppliers', 'ruangans', 'preLokasiId', 'redirectTo'));
     }
 
     public function store(Request $request)
@@ -45,13 +44,20 @@ class BarangController extends Controller
             'jumlah_rusak_berat' => 'required|integer|min:0',
             'keterangan_mutasi' => 'nullable|string',
             'supplier_id' => 'required|exists:suppliers,id',
-            'lokasi_id' => 'nullable|exists:ruangans,id',
+            'lokasi' => 'nullable|array',
+            'lokasi.*.ruangan_id' => 'required|exists:ruangans,id',
+            'lokasi.*.jumlah' => 'required|integer|min:1',
         ]);
 
-        $validatedData['ruangan_id'] = $validatedData['lokasi_id'] ?? null;
-        unset($validatedData['lokasi_id']);
+        // Remove lokasi from validated data before creating barang
+        $lokasiData = $validatedData['lokasi'] ?? [];
+        unset($validatedData['lokasi']);
 
         $barang = Barang::create($validatedData);
+
+        // Sync lokasi pivot
+        $this->syncLokasi($barang, $lokasiData);
+
         $this->syncUnits($barang);
 
         if ($request->filled('redirect_to')) {
@@ -63,14 +69,28 @@ class BarangController extends Controller
 
     public function show(Barang $barang)
     {
-        $barang->load(['supplier', 'ruangan']);
+        $barang->load(['supplier', 'ruangans']);
         return view('barangs.show', compact('barang'));
     }
 
     public function units(Barang $barang)
     {
-        $barang->load(['unitBarangs', 'ruangan']);
-        return view('barangs.units', compact('barang'));
+        $query = $barang->unitBarangs()->with('ruangan');
+        
+        if (request()->has('ruangan_id')) {
+            $query->where('ruangan_id', request('ruangan_id'));
+            $filterRuanganId = request('ruangan_id');
+        } else {
+            $filterRuanganId = null;
+        }
+
+        $unitBarangs = $query->get();
+        $barang->setRelation('unitBarangs', $unitBarangs);
+        
+        $barang->load('ruangans');
+        $ruangans = Ruangan::all();
+        
+        return view('barangs.units', compact('barang', 'ruangans', 'filterRuanganId'));
     }
 
     public function updateUnit(Request $request, \App\Models\UnitBarang $unitBarang)
@@ -78,6 +98,7 @@ class BarangController extends Controller
         $validated = $request->validate([
             'keterangan' => 'nullable|string',
             'kondisi' => 'required|in:baik,rusak_ringan,rusak_berat',
+            'ruangan_id' => 'nullable|exists:ruangans,id',
         ]);
 
         $oldKondisi = $unitBarang->kondisi;
@@ -104,6 +125,7 @@ class BarangController extends Controller
     {
         $suppliers = Supplier::all();
         $ruangans = Ruangan::all();
+        $barang->load('ruangans');
         return view('barangs.edit', compact('barang', 'suppliers', 'ruangans'));
     }
 
@@ -123,16 +145,43 @@ class BarangController extends Controller
             'jumlah_rusak_berat' => 'required|integer|min:0',
             'keterangan_mutasi' => 'nullable|string',
             'supplier_id' => 'required|exists:suppliers,id',
-            'lokasi_id' => 'nullable|exists:ruangans,id',
+            'lokasi' => 'nullable|array',
+            'lokasi.*.ruangan_id' => 'required|exists:ruangans,id',
+            'lokasi.*.jumlah' => 'required|integer|min:1',
         ]);
 
-        $validatedData['ruangan_id'] = $validatedData['lokasi_id'] ?? null;
-        unset($validatedData['lokasi_id']);
+        // Remove lokasi from validated data before updating barang
+        $lokasiData = $validatedData['lokasi'] ?? [];
+        unset($validatedData['lokasi']);
 
         $barang->update($validatedData);
+
+        // Sync lokasi pivot
+        $this->syncLokasi($barang, $lokasiData);
+
         $this->syncUnits($barang);
 
         return redirect()->route('barangs.index')->with('success', 'Barang berhasil diperbarui.');
+    }
+
+    /**
+     * Sync lokasi pivot table for a barang.
+     */
+    private function syncLokasi(Barang $barang, array $lokasiData)
+    {
+        $syncData = [];
+        foreach ($lokasiData as $loc) {
+            if (!empty($loc['ruangan_id'])) {
+                // If same ruangan appears multiple times, sum the jumlah
+                $rid = $loc['ruangan_id'];
+                if (isset($syncData[$rid])) {
+                    $syncData[$rid]['jumlah'] += (int) $loc['jumlah'];
+                } else {
+                    $syncData[$rid] = ['jumlah' => (int) $loc['jumlah']];
+                }
+            }
+        }
+        $barang->ruangans()->sync($syncData);
     }
 
     private function syncUnits(Barang $b)
@@ -160,6 +209,24 @@ class BarangController extends Controller
              // For deletions, we truncate the overflow units.
              // Normally this requires more complex ID mapping.
              \App\Models\UnitBarang::where('barang_id', $b->id)->orderBy('id', 'desc')->take($existingCount - $targetCount)->delete();
+        }
+
+        // Auto-assign ruangan_id based on pivot amounts
+        $b->load('ruangans');
+        $units = $b->unitBarangs()->orderBy('id')->get();
+        // Reset all to null first to re-distribute
+        \App\Models\UnitBarang::where('barang_id', $b->id)->update(['ruangan_id' => null]);
+        
+        $unitIdx = 0;
+        foreach ($b->ruangans as $ruangan) {
+            $quota = $ruangan->pivot->jumlah;
+            for ($i = 0; $i < $quota; $i++) {
+                if (isset($units[$unitIdx])) {
+                    $units[$unitIdx]->ruangan_id = $ruangan->id;
+                    $units[$unitIdx]->save();
+                    $unitIdx++;
+                }
+            }
         }
     }
 

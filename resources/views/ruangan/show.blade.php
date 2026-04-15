@@ -83,7 +83,8 @@
                                 <th class="px-4 py-4" x-show="columns.includes('bahan')">Bahan</th>
                                 <th class="px-4 py-4" x-show="columns.includes('tahun')">Tahun</th>
                                 <th class="px-4 py-4" x-show="columns.includes('kode_barang')">Kode</th>
-                                <th class="px-4 py-4 text-center" x-show="columns.includes('jumlah')">Jumlah</th>
+                                <th class="px-4 py-4 text-center" x-show="columns.includes('jumlah')">Jml Total</th>
+                                <th class="px-4 py-4 text-center" x-show="columns.includes('jml_ruangan')">Di Ruangan Ini</th>
                                 <th class="px-4 py-4 text-right" x-show="columns.includes('harga')">Harga</th>
                                 <th class="px-3 py-4 text-center" x-show="columns.includes('keadaan')">
                                     <span class="text-emerald-600">B</span> /
@@ -113,6 +114,11 @@
                                             {{ $brg->jumlah_total }}
                                         </span>
                                     </td>
+                                    <td class="px-4 py-4 text-center" x-show="columns.includes('jml_ruangan')">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                                            {{ $brg->pivot->jumlah }}
+                                        </span>
+                                    </td>
                                     <td class="px-4 py-4 text-right whitespace-nowrap" x-show="columns.includes('harga')">
                                         @if($brg->harga_perolehan) Rp {{ number_format($brg->harga_perolehan, 0, ',', '.') }} @else - @endif
                                     </td>
@@ -127,7 +133,7 @@
                                     <td class="px-4 py-4 max-w-[150px] truncate text-xs text-slate-500" x-show="columns.includes('mutasi')">{{ $brg->keterangan_mutasi ?? '-' }}</td>
                                     <td class="px-4 py-4 text-right">
                                         <div class="flex justify-end space-x-1">
-                                            <a href="{{ route('barangs.units', $brg) }}" class="inline-flex items-center px-2.5 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-xs font-medium">Unit</a>
+                                            <a href="{{ route('barangs.units', ['barang' => $brg->id, 'ruangan_id' => $ruangan->id]) }}" class="inline-flex items-center px-2.5 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-xs font-medium">Unit</a>
                                             <a href="{{ route('barangs.show', $brg) }}" class="inline-flex items-center px-2.5 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium">Detail</a>
                                             <a href="{{ route('barangs.edit', $brg) }}" class="inline-flex items-center px-2.5 py-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors text-xs font-medium">Edit</a>
                                         </div>
@@ -158,14 +164,15 @@ function ruanganBarangTable() {
             { key: 'bahan', label: 'Bahan' },
             { key: 'tahun', label: 'Tahun' },
             { key: 'kode_barang', label: 'Nomor Kode' },
-            { key: 'jumlah', label: 'Jumlah' },
+            { key: 'jumlah', label: 'Jumlah Total' },
+            { key: 'jml_ruangan', label: 'Di Ruangan Ini' },
             { key: 'harga', label: 'Harga Perolehan' },
             { key: 'keadaan', label: 'Keadaan (B/RR/RB)' },
             { key: 'supplier', label: 'Supplier' },
             { key: 'mutasi', label: 'Ket. Mutasi' },
         ],
         columns: JSON.parse(localStorage.getItem('ruangan_barang_cols') || 'null') || [
-            'nama_barang', 'merk_model', 'kode_barang', 'jumlah', 'harga', 'keadaan', 'supplier', 'mutasi'
+            'nama_barang', 'merk_model', 'kode_barang', 'jumlah', 'jml_ruangan', 'harga', 'keadaan', 'supplier', 'mutasi'
         ],
         toggleColumn(key) {
             if (this.columns.includes(key)) {

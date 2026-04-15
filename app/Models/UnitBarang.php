@@ -11,10 +11,16 @@ class UnitBarang extends Model
         'kode_unit',
         'kondisi',
         'keterangan',
+        'ruangan_id',
     ];
 
     public function barang()
     {
         return $this->belongsTo(Barang::class);
+    }
+
+    public function ruangan()
+    {
+        return $this->belongsTo(Ruangan::class);
     }
 }

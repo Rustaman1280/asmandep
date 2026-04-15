@@ -20,7 +20,6 @@ class Barang extends Model
         'jumlah_rusak_berat',
         'keterangan_mutasi',
         'supplier_id',
-        'ruangan_id',
     ];
 
     public function supplier()
@@ -28,9 +27,11 @@ class Barang extends Model
         return $this->belongsTo(Supplier::class);
     }
 
-    public function ruangan()
+    public function ruangans()
     {
-        return $this->belongsTo(Ruangan::class);
+        return $this->belongsToMany(Ruangan::class, 'barang_ruangan')
+                    ->withPivot('jumlah')
+                    ->withTimestamps();
     }
 
     public function unitBarangs()

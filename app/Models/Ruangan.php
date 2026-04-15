@@ -21,6 +21,8 @@ class Ruangan extends Model
 
     public function barangs()
     {
-        return $this->hasMany(Barang::class);
+        return $this->belongsToMany(Barang::class, 'barang_ruangan')
+                    ->withPivot('jumlah')
+                    ->withTimestamps();
     }
 }

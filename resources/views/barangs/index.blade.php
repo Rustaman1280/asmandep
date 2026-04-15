@@ -146,9 +146,15 @@
                         </td>
                         <td class="px-4 py-4 text-sm" x-show="columns.includes('supplier')">{{ $barang->supplier->nama_supplier ?? '-' }}</td>
                         <td class="px-4 py-4 text-sm" x-show="columns.includes('lokasi')">
-                            @if($barang->ruangan)
-                                {{ $barang->ruangan->nama }}
-                                <span class="text-xs text-slate-400">({{ $barang->ruangan->jenis_ruangan }})</span>
+                            @if($barang->ruangans->isNotEmpty())
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($barang->ruangans as $r)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                            {{ $r->nama }}
+                                            <span class="ml-1 text-blue-400">×{{ $r->pivot->jumlah }}</span>
+                                        </span>
+                                    @endforeach
+                                </div>
                             @else - @endif
                         </td>
                         <td class="px-4 py-4 max-w-[150px] truncate text-xs text-slate-500" x-show="columns.includes('mutasi')">{{ $barang->keterangan_mutasi ?? '-' }}</td>

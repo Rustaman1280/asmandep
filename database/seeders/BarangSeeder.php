@@ -20,7 +20,7 @@ class BarangSeeder extends Seeder
             ?? Ruangan::where('jenis_ruangan', 'Ruang Laboratorium')->first();
 
         if ($supplier1 && $ruangLab) {
-            Barang::firstOrCreate(
+            $barang1 = Barang::firstOrCreate(
                 ['kode_barang' => 'BRG001'],
                 [
                     'nama_barang' => 'Laptop Asus',
@@ -35,13 +35,13 @@ class BarangSeeder extends Seeder
                     'jumlah_rusak_berat' => 0,
                     'keterangan_mutasi' => null,
                     'supplier_id' => $supplier1->id,
-                    'ruangan_id' => $ruangLab->id,
                 ]
             );
+            $barang1->ruangans()->syncWithoutDetaching([$ruangLab->id => ['jumlah' => 10]]);
         }
 
         if ($supplier1 && $ruangKelas) {
-            Barang::firstOrCreate(
+            $barang2 = Barang::firstOrCreate(
                 ['kode_barang' => 'BRG002'],
                 [
                     'nama_barang' => 'Proyektor Epson',
@@ -56,9 +56,9 @@ class BarangSeeder extends Seeder
                     'jumlah_rusak_berat' => 0,
                     'keterangan_mutasi' => 'Ditempatkan di ruang kelas',
                     'supplier_id' => $supplier1->id,
-                    'ruangan_id' => $ruangKelas->id,
                 ]
             );
+            $barang2->ruangans()->syncWithoutDetaching([$ruangKelas->id => ['jumlah' => 2]]);
         }
     }
 }

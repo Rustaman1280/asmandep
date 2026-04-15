@@ -67,15 +67,20 @@
                 </div>
             </div>
             <div>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Lokasi</p>
-                <p class="text-sm text-slate-700">
-                    @if($barang->ruangan)
-                        {{ $barang->ruangan->nama }}
-                        <span class="text-xs text-slate-400">({{ $barang->ruangan->jenis_ruangan }})</span>
-                    @else
-                        -
-                    @endif
-                </p>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Lokasi</p>
+                @if($barang->ruangans->isNotEmpty())
+                    <div class="flex flex-wrap gap-1.5">
+                        @foreach($barang->ruangans as $r)
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                {{ $r->nama }}
+                                <span class="text-blue-400 ml-1">({{ $r->jenis_ruangan }})</span>
+                                <span class="ml-1.5 bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold">×{{ $r->pivot->jumlah }}</span>
+                            </span>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-slate-700">-</p>
+                @endif
             </div>
             <div>
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Supplier</p>
