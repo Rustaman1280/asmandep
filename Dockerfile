@@ -19,9 +19,6 @@ RUN composer install --optimize-autoloader --no-interaction --no-dev
 # Install NPM dependencies & Compile Frontend Assets
 RUN npm install && npm run build
 
-# Make sure permissions are correct for Laravel
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
-
 ENV PORT=8000
 EXPOSE $PORT
 
