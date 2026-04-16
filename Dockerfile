@@ -25,3 +25,5 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 ENV PORT=8000
 EXPOSE $PORT
 
+# Jalankan migrate, seed, dan nyalakan web-server sekaligus saat container start
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
